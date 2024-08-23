@@ -2,9 +2,19 @@ import 'dart:async';
 import 'dart:math';
 import 'dart:ui';
 
+import 'dart:async';
+import 'dart:math';
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:webview_flutter/webview_flutter.dart';
+
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:webview_flutter/webview_flutter.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -129,16 +139,25 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildGlassCard(
-              child: const Text(
-                'Discover Yourself',
-                style: TextStyle(
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white),
-              ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                _buildGlassCard(
+                  child: const Text(
+                    'Discover Yourself',
+                    style: TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white),
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.settings, color: Colors.white),
+                  onPressed: _showSettingsDialog,
+                ),
+              ],
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 100),
             Expanded(
               child: GridView.count(
                 crossAxisCount: 2,
@@ -163,14 +182,6 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                     fontStyle: FontStyle.italic,
                     color: Colors.white70),
               ),
-            ),
-            const SizedBox(height: 20),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                _buildTextButton('About', _showAboutDialog),
-                _buildTextButton('Privacy Policy', _showPrivacyPolicyDialog),
-              ],
             ),
           ],
         ),
@@ -212,16 +223,6 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
             child: Text(isActive ? '${_remainingTime}s' : 'Start Timer'),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildTextButton(String text, VoidCallback onPressed) {
-    return TextButton(
-      onPressed: onPressed,
-      child: Text(
-        text,
-        style: const TextStyle(color: Colors.white),
       ),
     );
   }
@@ -268,6 +269,44 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     );
   }
 
+  void _showSettingsDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Settings'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                title: const Text('Privacy Policy'),
+                onTap: () {
+                  Navigator.of(context).pop();
+                  _openWebView('Privacy Policy', 'https://google.com/');
+                },
+              ),
+              // ListTile(
+              //   title: const Text('Terms and Conditions'),
+              //   onTap: () {
+              //     Navigator.of(context).pop();
+              //     _openWebView(
+              //         'Terms and Conditions', 'https://example.com/terms');
+              //   },
+              // ),
+              ListTile(
+                title: const Text('About'),
+                onTap: () {
+                  Navigator.of(context).pop();
+                  _showAboutDialog();
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   void _showAboutDialog() {
     showDialog(
       context: context,
@@ -275,7 +314,11 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         return AlertDialog(
           title: const Text('About'),
           content: const Text(
-              'Discover Yourself Meditation is an app designed to help you find inner peace and mindfulness through various meditation techniques.'),
+            'Discover Yourself Meditation is an app designed to help you find inner peace and mindfulness through various meditation techniques. '
+            'Our goal is to provide a simple, effective tool for daily meditation practice, '
+            'helping users reduce stress, improve focus, and enhance overall well-being. '
+            'This app is created with love and care, respecting user privacy and adhering to best practices in app development.',
+          ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
@@ -287,22 +330,34 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     );
   }
 
-  void _showPrivacyPolicyDialog() {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Privacy Policy'),
-          content: const Text(
-              'We respect your privacy. This app does not collect or store any personal information.'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Close'),
-            ),
-          ],
-        );
-      },
+  void _openWebView(String title, String url) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => WebViewPage(title: title, url: url),
+      ),
+    );
+  }
+}
+
+class WebViewPage extends StatelessWidget {
+  final String title;
+  final String url;
+
+  const WebViewPage({super.key, required this.title, required this.url});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      home: Scaffold(
+        appBar: AppBar(
+          title: Text(title),
+        ),
+        body: WebViewWidget(
+          controller: WebViewController()
+            ..loadRequest(Uri.parse(url))
+            ..setJavaScriptMode(JavaScriptMode.unrestricted),
+        ),
+      ),
     );
   }
 }
