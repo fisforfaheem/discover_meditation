@@ -1815,9 +1815,19 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                'Settings',
-                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+              Row(
+                children: [
+                  const Text(
+                    '⚙️ Settings',
+                    style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(width: 8),
+                  Icon(
+                    Icons.settings,
+                    size: 28,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                ],
               )
                   .animate()
                   .fadeIn(duration: 600.milliseconds)
@@ -1834,51 +1844,69 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   Widget _buildSettingsOptions() {
     return Column(
       children: [
-        SwitchListTile(
-          title: const Text('Notifications'),
-          secondary: const Icon(Icons.notifications),
-          value: _notificationsEnabled,
-          onChanged: (bool value) {
-            _toggleNotifications();
-          },
+        _buildSettingsSection(
+          'App Preferences',
+          [
+            _buildEnhancedSwitchTile(
+              'Notifications',
+              '🔔 Stay updated with meditation reminders',
+              Icons.notifications_active,
+              Colors.blue,
+              _notificationsEnabled,
+              (bool value) =>
+                  _toggleNotifications(), // Convert to correct function type
+            ),
+            _buildEnhancedSwitchTile(
+              'Dark Mode',
+              '🌙 Switch to dark theme',
+              Icons.dark_mode,
+              Colors.purple,
+              _isDarkMode,
+              (bool value) =>
+                  _toggleDarkMode(), // Convert to correct function type
+            ),
+            _buildEnhancedSwitchTile(
+              'Sound Effects',
+              '🎵 Enable meditation sounds',
+              Icons.music_note,
+              Colors.green,
+              _soundEffectsEnabled,
+              (bool value) =>
+                  _toggleSoundEffects(), // Convert to correct function type
+            ),
+          ],
         ),
-        SwitchListTile(
-          title: const Text('Dark Mode'),
-          secondary: const Icon(Icons.dark_mode),
-          value: _isDarkMode,
-          onChanged: (bool value) {
-            _toggleDarkMode();
-          },
+        const SizedBox(height: 20),
+        _buildSettingsSection(
+          'Information',
+          [
+            _buildEnhancedSettingsItem(
+              'Privacy Policy',
+              '🔒 Read our privacy policy',
+              Icons.privacy_tip,
+              Colors.orange,
+              () => _openWebView('Privacy Policy',
+                  'https://sites.google.com/view/remind-to-relax/home'),
+            ),
+            _buildEnhancedSettingsItem(
+              'FAQ',
+              '❓ Get help and support',
+              Icons.help_outline,
+              Colors.teal,
+              () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const FAQListScreen()),
+              ),
+            ),
+            _buildEnhancedSettingsItem(
+              'About',
+              'ℹ️ App information and version',
+              Icons.info,
+              Colors.indigo,
+              _showAboutDialog,
+            ),
+          ],
         ),
-        SwitchListTile(
-          title: const Text('Sound Effects'),
-          secondary: const Icon(Icons.volume_up),
-          value: _soundEffectsEnabled,
-          onChanged: (bool value) {
-            _toggleSoundEffects();
-          },
-        ),
-        _buildSettingsItem(
-          'Privacy Policy',
-          Icons.privacy_tip,
-          () => _openWebView('Privacy Policy', 'https://example.com/privacy'),
-        ),
-        _buildSettingsItem(
-          'Terms of Service',
-          Icons.description,
-          () => _openWebView('Terms of Service', 'https://example.com/terms'),
-        ),
-        // Add this new item before the About option
-        _buildSettingsItem(
-          'FAQ',
-          Icons.help_outline,
-          () => Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const FAQListScreen()),
-          ),
-        ),
-
-        _buildSettingsItem('About', Icons.info, _showAboutDialog),
       ],
     )
         .animate()
@@ -1886,11 +1914,95 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         .slideY(begin: 0.2, end: 0);
   }
 
-  Widget _buildSettingsItem(String title, IconData icon, VoidCallback onTap) {
+  Widget _buildSettingsSection(String title, List<Widget> children) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: Text(
+            title,
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: Theme.of(context).colorScheme.primary,
+            ),
+          ),
+        ),
+        Container(
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surface,
+            borderRadius: BorderRadius.circular(15),
+            boxShadow: [
+              BoxShadow(
+                color: Theme.of(context).shadowColor.withOpacity(0.1),
+                blurRadius: 10,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Column(children: children),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildEnhancedSwitchTile(
+    String title,
+    String subtitle,
+    IconData icon,
+    Color color,
+    bool value,
+    Function(bool) onChanged,
+  ) {
     return ListTile(
-      leading: Icon(icon),
+      leading: Container(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Icon(icon, color: color),
+      ),
       title: Text(title),
-      trailing: const Icon(Icons.chevron_right),
+      subtitle: Text(
+        subtitle,
+        style: TextStyle(
+            fontSize: 12,
+            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6)),
+      ),
+      trailing: Switch(
+        value: value,
+        onChanged: onChanged,
+        activeColor: color,
+      ),
+    );
+  }
+
+  Widget _buildEnhancedSettingsItem(
+    String title,
+    String subtitle,
+    IconData icon,
+    Color color,
+    VoidCallback onTap,
+  ) {
+    return ListTile(
+      leading: Container(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Icon(icon, color: color),
+      ),
+      title: Text(title),
+      subtitle: Text(
+        subtitle,
+        style: TextStyle(
+            fontSize: 12,
+            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6)),
+      ),
+      trailing: Icon(Icons.chevron_right, color: color),
       onTap: onTap,
     );
   }
@@ -2055,32 +2167,116 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('About'),
-          content: const SingleChildScrollView(
-            child: Text(
-              'Discover Yourself Meditation is an app designed to help you find inner peace and mindfulness through various meditation techniques. '
-              'Our goal is to provide a simple, effective tool for daily meditation practice, '
-              'helping users reduce stress, improve focus, and enhance overall well-being. '
-              'This app is created with love and care, respecting user privacy and adhering to best practices in app development.\n\n'
-              'Features:\n'
-              '- Guided meditations for various purposes\n'
-              '- Customizable meditation durations\n'
-              '- Daily streaks and achievements\n'
-              '- Mindfulness score tracking\n'
-              '- Beautiful, calming user interface\n\n'
-              'Version: 1.0.0\n'
-              'Developed by: Asim Jaan',
+        return Dialog(
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          child: Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(20),
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Theme.of(context).colorScheme.surface,
+                  Theme.of(context).colorScheme.surface.withOpacity(0.9),
+                ],
+              ),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  children: [
+                    const Text(
+                      '✨ About',
+                      style:
+                          TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                    ),
+                    const Spacer(),
+                    IconButton(
+                      icon: const Icon(Icons.close),
+                      onPressed: () => Navigator.of(context).pop(),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                const Text(
+                  '🧘‍♀️ Discover Yourself Meditation',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  'Your journey to inner peace and mindfulness starts here. We provide a simple yet powerful tool for daily meditation practice.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 16),
+                ),
+                const SizedBox(height: 24),
+                _buildFeatureItem(
+                    '🎯 Guided Meditations', 'For various purposes'),
+                _buildFeatureItem(
+                    '⏱️ Custom Durations', 'Meditate at your pace'),
+                _buildFeatureItem('🔥 Daily Streaks', 'Track your progress'),
+                _buildFeatureItem(
+                    '📊 Mindfulness Score', 'Monitor your growth'),
+                _buildFeatureItem('🎨 Beautiful UI', 'Calming experience'),
+                const SizedBox(height: 24),
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color:
+                        Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Column(
+                    children: [
+                      Text(
+                        'Version 1.0.0',
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.primary,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      const Text(
+                        'Developed with 💖 by Asim Jaan',
+                        style: TextStyle(fontSize: 14),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+                ElevatedButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  style: ElevatedButton.styleFrom(
+                    minimumSize: const Size(double.infinity, 45),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Text('Got it 👍'),
+                ),
+              ],
             ),
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Close'),
-            ),
-          ],
         );
       },
+    );
+  }
+
+  Widget _buildFeatureItem(String title, String subtitle) {
+    return ListTile(
+      dense: true,
+      leading: Container(
+        width: 4,
+        height: 24,
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.primary,
+          borderRadius: BorderRadius.circular(2),
+        ),
+      ),
+      title: Text(title, style: const TextStyle(fontWeight: FontWeight.w500)),
+      subtitle: Text(subtitle, style: const TextStyle(fontSize: 12)),
     );
   }
 

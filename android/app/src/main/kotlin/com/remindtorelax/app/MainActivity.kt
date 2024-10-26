@@ -1,4 +1,4 @@
-package com.example.discover_yourself_meditation
+package com.remindtorelax.app
 
 import io.flutter.embedding.android.FlutterActivity
 
