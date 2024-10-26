@@ -366,7 +366,6 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
 
   // User profile data
   String _userName = '';
-  String _userEmail = '';
   String _memberSince = '';
   int _totalMeditationTime = 0;
   int _dailyStreak = 0;
@@ -390,9 +389,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   Future<void> _loadUserData() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
-      _userName = prefs.getString('userName') ?? 'John Doe';
-      _userEmail = prefs.getString('userEmail') ?? 'john.doe@example.com';
-      _memberSince = prefs.getString('memberSince') ?? 'January 1, 2023';
+      _userName = prefs.getString('userName') ?? 'User';
+      _memberSince = prefs.getString('memberSince') ?? 'January 1, 2024';
       _totalMeditationTime = prefs.getInt('totalMeditationTime') ?? 0;
       _dailyStreak = prefs.getInt('dailyStreak') ?? 0;
       _totalSessions = prefs.getInt('totalSessions') ?? 0;
@@ -406,7 +404,6 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   Future<void> _saveUserData() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('userName', _userName);
-    await prefs.setString('userEmail', _userEmail);
     await prefs.setString('memberSince', _memberSince);
     await prefs.setInt('totalMeditationTime', _totalMeditationTime);
     await prefs.setInt('dailyStreak', _dailyStreak);
@@ -508,6 +505,10 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
 
   Widget _buildHomeContent() {
     final textTheme = Theme.of(context).textTheme;
+    final now = DateTime.now();
+    final greeting = _getGreeting(now.hour);
+    final emoji = _getGreetingEmoji(now.hour);
+
     return SafeArea(
       child: SingleChildScrollView(
         child: Padding(
@@ -516,32 +517,73 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _buildGlassCard(
-                child: Text(
-                  'Welcome, $_userName',
-                  style: textTheme.headlineMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: Theme.of(context).colorScheme.onSurface,
-                  ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '$greeting $emoji',
+                              style: textTheme.titleLarge?.copyWith(
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .onSurface
+                                    .withOpacity(0.7),
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              _userName,
+                              style: textTheme.headlineMedium?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: Theme.of(context).colorScheme.onSurface,
+                              ),
+                            ),
+                          ],
+                        ),
+                        CircleAvatar(
+                          radius: 30,
+                          backgroundColor: Theme.of(context)
+                              .colorScheme
+                              .primary
+                              .withOpacity(0.1),
+                          child: Text(
+                            _userName.isNotEmpty
+                                ? _userName[0].toUpperCase()
+                                : 'U',
+                            style: TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    _buildDailyProgress(),
+                  ],
                 ),
-              )
+              ).animate().fadeIn(duration: 600.ms).slideY(begin: -0.2, end: 0),
+              const SizedBox(height: 24),
+              _buildQuickStartSection()
                   .animate()
-                  .fadeIn(duration: 600.milliseconds)
-                  .slideY(begin: -0.2, end: 0),
-              const SizedBox(height: 20),
-              _buildGlassCard(
-                child: Text(
-                  _currentQuote,
-                  style: textTheme.bodyLarge?.copyWith(
-                    fontStyle: FontStyle.italic,
-                    color: Theme.of(context).colorScheme.onSurface,
-                  ),
-                ),
-              )
-                  .animate()
-                  .fadeIn(duration: 600.milliseconds, delay: 200.milliseconds)
+                  .fadeIn(duration: 600.ms, delay: 200.ms)
                   .slideY(begin: 0.2, end: 0),
-              const SizedBox(height: 20),
-              _buildBentoGrid(),
+              const SizedBox(height: 24),
+              _buildDailyInsights()
+                  .animate()
+                  .fadeIn(duration: 600.ms, delay: 400.ms)
+                  .slideY(begin: 0.2, end: 0),
+              const SizedBox(height: 24),
+              _buildQuoteCard()
+                  .animate()
+                  .fadeIn(duration: 600.ms, delay: 600.ms)
+                  .slideY(begin: 0.2, end: 0),
             ],
           ),
         ),
@@ -549,43 +591,284 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildBentoGrid() {
-    return GridView.count(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      crossAxisCount: 2,
-      mainAxisSpacing: 16,
-      crossAxisSpacing: 16,
-      children: [
-        _buildBentoItem('Daily Streak', '$_dailyStreak days',
-            Icons.local_fire_department, Colors.orange),
-        _buildBentoItem(
-            'Total Sessions', '$_totalSessions', Icons.timer, Colors.blue),
-        _buildBentoItem('Mindfulness Score', '$_mindfulnessScore%',
-            Icons.psychology, Colors.green),
-        _buildBentoItem('Favorite Technique', _favoriteTechnique,
-            Icons.favorite, Colors.red),
-      ],
-    )
-        .animate()
-        .fadeIn(duration: 800.milliseconds, delay: 400.milliseconds)
-        .scale(begin: const Offset(0.8, 0.8), end: const Offset(1, 1));
+  String _getGreeting(int hour) {
+    if (hour < 12) {
+      return 'Good Morning';
+    } else if (hour < 17) {
+      return 'Good Afternoon';
+    } else {
+      return 'Good Evening';
+    }
   }
 
-  Widget _buildBentoItem(
-      String title, String value, IconData icon, Color color) {
-    final textTheme = Theme.of(context).textTheme;
+  String _getGreetingEmoji(int hour) {
+    if (hour < 12) {
+      return '🌅';
+    } else if (hour < 17) {
+      return '☀️';
+    } else {
+      return '🌙';
+    }
+  }
+
+  Widget _buildDailyProgress() {
+    final progress = _mindfulnessScore / 100;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'Daily Progress',
+              style: TextStyle(
+                fontSize: 16,
+                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+              ),
+            ),
+            Text(
+              '${(_mindfulnessScore).round()}%',
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        LinearProgressIndicator(
+          value: progress,
+          backgroundColor:
+              Theme.of(context).colorScheme.primary.withOpacity(0.1),
+          valueColor: AlwaysStoppedAnimation<Color>(
+              Theme.of(context).colorScheme.primary),
+          borderRadius: BorderRadius.circular(10),
+          minHeight: 8,
+        ),
+        const SizedBox(height: 8),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            _buildMiniStat('🔥 Streak', '$_dailyStreak days'),
+            _buildMiniStat(
+                '⏱️ Today', '${(_totalMeditationTime / 60).round()} mins'),
+            _buildMiniStat('🎯 Goal', '20 mins'),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMiniStat(String label, String value) {
+    return Column(
+      children: [
+        Text(
+          value,
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 12,
+            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildQuickStartSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          '✨ Quick Start',
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: Theme.of(context).colorScheme.onSurface,
+          ),
+        ),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            Expanded(
+              child: _buildQuickStartButton(
+                'Breathe',
+                '5 min',
+                Icons.air,
+                Colors.blue,
+                () => _startMeditation('Breathe', 5),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _buildQuickStartButton(
+                'Focus',
+                '10 min',
+                Icons.center_focus_strong,
+                Colors.green,
+                () => _startMeditation('Focus', 10),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildQuickStartButton(String title, String duration, IconData icon,
+      Color color, VoidCallback onTap) {
+    return _buildGlassCard(
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(15),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 16.0),
+          child: Column(
+            children: [
+              Icon(icon, size: 32, color: color),
+              const SizedBox(height: 8),
+              Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              Text(
+                duration,
+                style: TextStyle(
+                  fontSize: 14,
+                  color:
+                      Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDailyInsights() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          '📊 Daily Insights',
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: Theme.of(context).colorScheme.onSurface,
+          ),
+        ),
+        const SizedBox(height: 12),
+        _buildGlassCard(
+          child: Column(
+            children: [
+              _buildInsightItem(
+                '🎯 Focus Level',
+                'Excellent',
+                LinearProgressIndicator(
+                  value: 0.8,
+                  backgroundColor: Colors.blue.withOpacity(0.1),
+                  valueColor: const AlwaysStoppedAnimation<Color>(Colors.blue),
+                  borderRadius: BorderRadius.circular(10),
+                  minHeight: 6,
+                ),
+              ),
+              const Divider(),
+              _buildInsightItem(
+                '😌 Stress Level',
+                'Low',
+                LinearProgressIndicator(
+                  value: 0.3,
+                  backgroundColor: Colors.green.withOpacity(0.1),
+                  valueColor: const AlwaysStoppedAnimation<Color>(Colors.green),
+                  borderRadius: BorderRadius.circular(10),
+                  minHeight: 6,
+                ),
+              ),
+              const Divider(),
+              _buildInsightItem(
+                '💪 Consistency',
+                'Good',
+                LinearProgressIndicator(
+                  value: 0.6,
+                  backgroundColor: Colors.orange.withOpacity(0.1),
+                  valueColor:
+                      const AlwaysStoppedAnimation<Color>(Colors.orange),
+                  borderRadius: BorderRadius.circular(10),
+                  minHeight: 6,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildInsightItem(String title, String value, Widget indicator) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                title,
+                style: const TextStyle(fontSize: 14),
+              ),
+              Text(
+                value,
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          indicator,
+        ],
+      ),
+    );
+  }
+
+  Widget _buildQuoteCard() {
     return _buildGlassCard(
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, size: 40, color: color),
-          const SizedBox(height: 8),
-          Text(title,
-              style:
-                  textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold)),
-          const SizedBox(height: 4),
-          Text(value, style: textTheme.titleMedium),
+          const Row(
+            children: [
+              Icon(Icons.format_quote, size: 24),
+              SizedBox(width: 8),
+              Text(
+                'Daily Wisdom',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text(
+            _currentQuote,
+            style: TextStyle(
+              fontSize: 16,
+              fontStyle: FontStyle.italic,
+              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.8),
+            ),
+          ),
         ],
       ),
     );
@@ -641,16 +924,12 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                'Your Profile',
-                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-              )
-                  .animate()
-                  .fadeIn(duration: 600.milliseconds)
-                  .slideX(begin: -0.2, end: 0),
-              const SizedBox(height: 20),
-              _buildProfileInfo(),
-              const SizedBox(height: 20),
+              _buildProfileHeader(),
+              const SizedBox(height: 24),
+              _buildStatisticsSection(),
+              const SizedBox(height: 24),
+              _buildMeditationJourney(),
+              const SizedBox(height: 24),
               _buildAchievements(),
             ],
           ),
@@ -659,77 +938,210 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildProfileInfo() {
+  Widget _buildProfileHeader() {
     return _buildGlassCard(
       child: Column(
         children: [
-          const CircleAvatar(
-            radius: 50,
-            backgroundImage: NetworkImage('https://picsum.photos/200'),
-          ),
-          const SizedBox(height: 16),
-          Text(_userName,
-              style:
-                  const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
-          Text(_userEmail, style: const TextStyle(fontSize: 16)),
-          const SizedBox(height: 16),
-          Text('Member since: $_memberSince'),
-          Text(
-              'Total meditation time: ${(_totalMeditationTime / 60).round()} minutes'),
-          ElevatedButton(
-            onPressed: _showEditProfileDialog,
-            child: const Text('Edit Profile'),
-          ),
-        ],
-      ),
-    )
-        .animate()
-        .fadeIn(duration: 800.milliseconds, delay: 200.milliseconds)
-        .scale(begin: const Offset(0.9, 0.9), end: const Offset(1, 1));
-  }
-
-  void _showEditProfileDialog() {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        String tempName = _userName;
-        String tempEmail = _userEmail;
-        return AlertDialog(
-          title: const Text('Edit Profile'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
+          Stack(
+            alignment: Alignment.bottomRight,
             children: [
-              TextField(
-                decoration: const InputDecoration(labelText: 'Name'),
-                onChanged: (value) => tempName = value,
-                controller: TextEditingController(text: _userName),
+              CircleAvatar(
+                radius: 50,
+                backgroundColor:
+                    Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                child: Text(
+                  _userName.isNotEmpty ? _userName[0].toUpperCase() : 'U',
+                  style: TextStyle(
+                    fontSize: 36,
+                    fontWeight: FontWeight.bold,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                ),
               ),
-              TextField(
-                decoration: const InputDecoration(labelText: 'Email'),
-                onChanged: (value) => tempEmail = value,
-                controller: TextEditingController(text: _userEmail),
+              CircleAvatar(
+                radius: 18,
+                backgroundColor: Theme.of(context).colorScheme.primary,
+                child: IconButton(
+                  icon: const Icon(Icons.edit, size: 16, color: Colors.white),
+                  onPressed: _showEditProfileDialog,
+                ),
               ),
             ],
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Cancel'),
+          const SizedBox(height: 16),
+          Text(
+            _userName,
+            style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            'Member since: $_memberSince',
+            style: TextStyle(
+              fontSize: 14,
+              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
             ),
-            TextButton(
-              onPressed: () {
-                setState(() {
-                  _userName = tempName;
-                  _userEmail = tempEmail;
-                });
-                _saveUserData();
-                Navigator.of(context).pop();
-              },
-              child: const Text('Save'),
+          ),
+        ],
+      ),
+    ).animate().fadeIn(duration: 600.ms).slideY(begin: -0.2, end: 0);
+  }
+
+  Widget _buildStatisticsSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Your Journey',
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: Theme.of(context).colorScheme.onSurface,
+          ),
+        ),
+        const SizedBox(height: 12),
+        GridView.count(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          crossAxisCount: 2,
+          mainAxisSpacing: 12,
+          crossAxisSpacing: 12,
+          childAspectRatio: 1.5,
+          children: [
+            _buildStatCard(
+              'Total Sessions',
+              '$_totalSessions',
+              Icons.self_improvement,
+              Colors.blue,
+            ),
+            _buildStatCard(
+              'Mindfulness Score',
+              '$_mindfulnessScore%',
+              Icons.psychology,
+              Colors.green,
+            ),
+            _buildStatCard(
+              'Daily Streak',
+              '$_dailyStreak days',
+              Icons.local_fire_department,
+              Colors.orange,
+            ),
+            _buildStatCard(
+              'Total Time',
+              '${(_totalMeditationTime / 60).round()} mins',
+              Icons.timer,
+              Colors.purple,
             ),
           ],
-        );
-      },
+        ),
+      ],
+    ).animate().fadeIn(duration: 800.ms, delay: 200.ms);
+  }
+
+  Widget _buildStatCard(
+      String title, String value, IconData icon, Color color) {
+    return _buildGlassCard(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, size: 24, color: color),
+          const SizedBox(height: 8),
+          Text(
+            value,
+            style: const TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 12,
+              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMeditationJourney() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Meditation Journey',
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: Theme.of(context).colorScheme.onSurface,
+          ),
+        ),
+        const SizedBox(height: 12),
+        _buildGlassCard(
+          child: Column(
+            children: [
+              _buildJourneyItem(
+                'Favorite Technique',
+                _favoriteTechnique,
+                Icons.favorite,
+                Colors.red,
+              ),
+              const Divider(),
+              _buildJourneyItem(
+                'Last Session',
+                '2 hours ago',
+                Icons.access_time,
+                Colors.blue,
+              ),
+              const Divider(),
+              _buildJourneyItem(
+                'Next Goal',
+                '10 day streak',
+                Icons.flag,
+                Colors.green,
+              ),
+            ],
+          ),
+        ),
+      ],
+    ).animate().fadeIn(duration: 800.ms, delay: 400.ms);
+  }
+
+  Widget _buildJourneyItem(
+      String title, String value, IconData icon, Color color) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: Row(
+        children: [
+          Icon(icon, size: 24, color: color),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Theme.of(context)
+                        .colorScheme
+                        .onSurface
+                        .withOpacity(0.7),
+                  ),
+                ),
+                Text(
+                  value,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -737,33 +1149,55 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Achievements',
-          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: Theme.of(context).colorScheme.onSurface,
+          ),
         ),
         const SizedBox(height: 12),
         Wrap(
           spacing: 8,
           runSpacing: 8,
           children: [
-            _buildAchievementBadge('7-Day Streak', Icons.emoji_events),
-            _buildAchievementBadge('Zen Master', Icons.psychology),
-            _buildAchievementBadge('Early Bird', Icons.wb_sunny),
-            _buildAchievementBadge('Night Owl', Icons.nightlight_round),
+            _buildAchievementBadge('Early Bird', Icons.wb_sunny, true),
+            _buildAchievementBadge('7-Day Streak', Icons.emoji_events, true),
+            _buildAchievementBadge('Zen Master', Icons.psychology, false),
+            _buildAchievementBadge('Night Owl', Icons.nightlight_round, false),
+            _buildAchievementBadge('30-Day Streak', Icons.star, false),
+            _buildAchievementBadge(
+                'Mindful Pro', Icons.workspace_premium, false),
           ],
         ),
       ],
-    )
-        .animate()
-        .fadeIn(duration: 800.milliseconds, delay: 400.milliseconds)
-        .slideY(begin: 0.2, end: 0);
+    ).animate().fadeIn(duration: 800.ms, delay: 600.ms);
   }
 
-  Widget _buildAchievementBadge(String title, IconData icon) {
-    return Chip(
-      avatar: Icon(icon, size: 18),
-      label: Text(title),
-      backgroundColor: Theme.of(context).colorScheme.secondary.withOpacity(0.1),
+  Widget _buildAchievementBadge(String title, IconData icon, bool isUnlocked) {
+    return Tooltip(
+      message: isUnlocked ? 'Achieved!' : 'Keep meditating to unlock',
+      child: Chip(
+        avatar: Icon(
+          icon,
+          size: 18,
+          color: isUnlocked
+              ? Theme.of(context).colorScheme.primary
+              : Theme.of(context).colorScheme.onSurface.withOpacity(0.3),
+        ),
+        label: Text(
+          title,
+          style: TextStyle(
+            color: isUnlocked
+                ? Theme.of(context).colorScheme.onSurface
+                : Theme.of(context).colorScheme.onSurface.withOpacity(0.3),
+          ),
+        ),
+        backgroundColor: isUnlocked
+            ? Theme.of(context).colorScheme.primary.withOpacity(0.1)
+            : Theme.of(context).colorScheme.onSurface.withOpacity(0.05),
+      ),
     );
   }
 
@@ -1017,6 +1451,81 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
         BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'Settings'),
       ],
+    );
+  }
+
+  // Add this method in the _HomePageState class
+  void _showEditProfileDialog() {
+    String tempName = _userName;
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20.0),
+          ),
+          child: Container(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'Edit Profile',
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Theme.of(context).colorScheme.onSurface,
+                  ),
+                ),
+                const SizedBox(height: 20),
+                TextField(
+                  decoration: InputDecoration(
+                    labelText: 'Name',
+                    prefixIcon: const Icon(Icons.person),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  controller: TextEditingController(text: _userName),
+                  onChanged: (value) => tempName = value,
+                ),
+                const SizedBox(height: 24),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    TextButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      child: Text(
+                        'Cancel',
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.secondary,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    ElevatedButton(
+                      onPressed: () {
+                        setState(() {
+                          _userName = tempName;
+                        });
+                        _saveUserData();
+                        Navigator.of(context).pop();
+                      },
+                      style: ElevatedButton.styleFrom(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                      child: const Text('Save'),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }
