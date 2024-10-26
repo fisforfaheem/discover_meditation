@@ -10,6 +10,115 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:confetti/confetti.dart';
 import 'package:liquid_swipe/liquid_swipe.dart';
 
+// Add these models at the top of the file, after the imports
+class FAQ {
+  final String question;
+  final String answer;
+  final IconData icon;
+  final Color color;
+  final String emoji;
+  final List<String>? bulletPoints;
+  final String? tip;
+
+  FAQ({
+    required this.question,
+    required this.answer,
+    required this.icon,
+    required this.color,
+    required this.emoji,
+    this.bulletPoints,
+    this.tip,
+  });
+}
+
+// Add this list of FAQs before the main class
+final List<FAQ> faqs = [
+  FAQ(
+    question: 'How do I get started with meditation?',
+    answer:
+        'Starting your meditation journey is easier than you might think! The key is to begin with small steps and gradually build your practice.',
+    icon: Icons.play_circle_outline,
+    color: Colors.blue,
+    emoji: '🌱',
+    bulletPoints: [
+      'Find a quiet, comfortable space',
+      'Start with just 5 minutes daily',
+      'Use guided meditations for beginners',
+      'Focus on your breath',
+      'Be patient with yourself',
+    ],
+    tip:
+        '💡 Pro Tip: Try meditating at the same time each day to build a habit.',
+  ),
+  FAQ(
+    question: 'What are the benefits of meditation?',
+    answer:
+        'Meditation offers a wide range of scientifically proven benefits for both mind and body.',
+    icon: Icons.favorite_outline,
+    color: Colors.pink,
+    emoji: '✨',
+    bulletPoints: [
+      'Reduced stress and anxiety 😌',
+      'Improved focus and concentration 🎯',
+      'Better sleep quality 😴',
+      'Enhanced emotional well-being 🌈',
+      'Increased self-awareness 🧘‍♀️',
+      'Lower blood pressure ❤️',
+      'Better stress management 🌿',
+    ],
+    tip:
+        '💡 Pro Tip: Track your mood before and after meditation to notice the benefits.',
+  ),
+  FAQ(
+    question: 'How often should I meditate?',
+    answer:
+        'Consistency is more important than duration when it comes to meditation practice.',
+    icon: Icons.calendar_today,
+    color: Colors.green,
+    emoji: '📅',
+    bulletPoints: [
+      'Daily practice is ideal',
+      'Start with 5-10 minutes',
+      'Gradually increase duration',
+      'Listen to your body',
+      'Quality over quantity',
+    ],
+    tip: '💡 Pro Tip: Set reminders to help establish your meditation routine.',
+  ),
+  FAQ(
+    question: 'Why do I feel sleepy during meditation?',
+    answer:
+        'Feeling sleepy during meditation is a common experience, especially for beginners.',
+    icon: Icons.nightlight_round,
+    color: Colors.indigo,
+    emoji: '😴',
+    bulletPoints: [
+      'Your body is deeply relaxing',
+      'You might be sleep-deprived',
+      'Time of day matters',
+      'Posture affects alertness',
+      'Energy levels fluctuate',
+    ],
+    tip: '💡 Pro Tip: Try meditating after some light exercise to stay alert.',
+  ),
+  FAQ(
+    question: 'How do I handle distracting thoughts?',
+    answer:
+        'Distracting thoughts are a normal part of meditation. The key is how you respond to them.',
+    icon: Icons.psychology,
+    color: Colors.orange,
+    emoji: '🧠',
+    bulletPoints: [
+      'Observe thoughts without judgment',
+      'Return focus to your breath',
+      'Use visualization techniques',
+      'Label your thoughts',
+      'Practice self-compassion',
+    ],
+    tip: '💡 Pro Tip: Think of thoughts as clouds passing by in the sky.',
+  ),
+];
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
@@ -1759,11 +1868,21 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
           Icons.description,
           () => _openWebView('Terms of Service', 'https://example.com/terms'),
         ),
+        // Add this new item before the About option
+        _buildSettingsItem(
+          'FAQ',
+          Icons.help_outline,
+          () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const FAQListScreen()),
+          ),
+        ),
+
         _buildSettingsItem('About', Icons.info, _showAboutDialog),
       ],
     )
         .animate()
-        .fadeIn(duration: 800.milliseconds, delay: 200.milliseconds)
+        .fadeIn(duration: 800.ms, delay: 200.ms)
         .slideY(begin: 0.2, end: 0);
   }
 
@@ -2143,4 +2262,265 @@ class BackgroundPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
+}
+
+// Update FAQListScreen with better UI
+class FAQListScreen extends StatelessWidget {
+  const FAQListScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('FAQ & Help Center'),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+      ),
+      body: Column(
+        children: [
+          _buildHeader(context),
+          Expanded(
+            child: ListView.builder(
+              padding: const EdgeInsets.all(16),
+              itemCount: faqs.length,
+              itemBuilder: (context, index) {
+                final faq = faqs[index];
+                return _buildFAQCard(context, faq);
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHeader(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        children: [
+          Text(
+            '❓ Frequently Asked Questions',
+            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Find answers to common questions about meditation',
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFAQCard(BuildContext context, FAQ faq) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 16),
+      elevation: 0,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(15),
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => FAQDetailScreen(faq: faq),
+            ),
+          );
+        },
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            border: Border.all(
+              color: faq.color.withOpacity(0.3),
+              width: 1,
+            ),
+            borderRadius: BorderRadius.circular(15),
+          ),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: faq.color.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(faq.icon, size: 24, color: faq.color),
+                    const SizedBox(width: 8),
+                    Text(
+                      faq.emoji,
+                      style: const TextStyle(fontSize: 24),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Text(
+                  faq.question,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+              Icon(
+                Icons.arrow_forward_ios,
+                size: 16,
+                color: faq.color,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// Update FAQDetailScreen with better UI
+class FAQDetailScreen extends StatelessWidget {
+  final FAQ faq;
+
+  const FAQDetailScreen({super.key, required this.faq});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('${faq.emoji} FAQ'),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+      ),
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            _buildHeader(context),
+            _buildContent(context),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHeader(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: faq.color.withOpacity(0.1),
+        borderRadius: const BorderRadius.vertical(
+          bottom: Radius.circular(30),
+        ),
+      ),
+      child: Column(
+        children: [
+          Icon(faq.icon, size: 48, color: faq.color),
+          const SizedBox(height: 16),
+          Text(
+            faq.question,
+            style: const TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildContent(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            faq.answer,
+            style: TextStyle(
+              fontSize: 16,
+              height: 1.6,
+              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.8),
+            ),
+          ),
+          if (faq.bulletPoints != null) ...[
+            const SizedBox(height: 24),
+            const Text(
+              'Key Points:',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 12),
+            ...faq.bulletPoints!.map((point) => _buildBulletPoint(point)),
+          ],
+          if (faq.tip != null) ...[
+            const SizedBox(height: 24),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: faq.color.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: faq.color.withOpacity(0.3),
+                ),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.lightbulb, color: faq.color),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      faq.tip!,
+                      style: TextStyle(
+                        color: faq.color,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBulletPoint(String point) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            margin: const EdgeInsets.only(top: 8),
+            width: 6,
+            height: 6,
+            decoration: BoxDecoration(
+              color: faq.color,
+              shape: BoxShape.circle,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              point,
+              style: const TextStyle(
+                fontSize: 16,
+                height: 1.5,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
