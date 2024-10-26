@@ -911,10 +911,10 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                     .fadeIn(duration: 800.ms)
                     .scale(begin: const Offset(0.95, 0.95)),
 
-              // Featured Techniques Section
-              _buildFeaturedTechniques()
-                  .animate()
-                  .fadeIn(duration: 800.ms, delay: 200.ms),
+              // // Featured Techniques Section
+              // _buildFeaturedTechniques()
+              //     .animate()
+              //     .fadeIn(duration: 800.ms, delay: 200.ms),
 
               const SizedBox(height: 24),
 
@@ -1010,6 +1010,110 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     );
   }
 
+  // Update _buildFeaturedCard with fixed height constraints
+  Widget _buildFeaturedCard(String title, String subtitle, Color color,
+      IconData icon, String duration, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: SizedBox(
+        width: 300,
+        height: 300, // Fixed height
+        // margin: const EdgeInsets.symmetric(vertical: 4),
+        child: _buildGlassCard(
+          child: Padding(
+            padding: const EdgeInsets.all(5), // Increased padding
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Icon and Duration Row
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(10), // Increased padding
+                      decoration: BoxDecoration(
+                        color: color.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Icon(icon, size: 24, color: color), // Larger icon
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ), // Increased padding
+                      decoration: BoxDecoration(
+                        color: color.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        duration,
+                        style: TextStyle(
+                          fontSize: 14, // Larger font
+                          color: color,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16), // Increased spacing
+                // Title
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 18, // Larger font
+                    fontWeight: FontWeight.bold,
+                  ),
+                  maxLines: 2, // Allow 2 lines for title
+                ),
+                const SizedBox(height: 8), // Increased spacing
+                // Subtitle
+                Expanded(
+                  // Wrap in Expanded to prevent overflow
+                  child: Text(
+                    subtitle,
+                    style: TextStyle(
+                      fontSize: 15, // Larger font
+                      color: Theme.of(context)
+                          .colorScheme
+                          .onSurface
+                          .withOpacity(0.7),
+                    ),
+                    maxLines: 3, // Allow 3 lines for subtitle
+                  ),
+                ),
+                const SizedBox(height: 16), // Increased spacing
+                // Start Button
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(
+                      vertical: 12), // Increased padding
+                  decoration: BoxDecoration(
+                    color: color.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Center(
+                    child: Text(
+                      'Start Session',
+                      style: TextStyle(
+                        fontSize: 14, // Larger font
+                        color: color,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // Update _buildFeaturedTechniques with adjusted height
   Widget _buildFeaturedTechniques() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1024,7 +1128,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         ),
         const SizedBox(height: 12),
         SizedBox(
-          height: 140, // Match card height
+          height: 160, // Match the card height
           child: ListView(
             scrollDirection: Axis.horizontal,
             children: [
@@ -1041,7 +1145,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                   maxDuration: 10,
                 ),
               ),
-              const SizedBox(width: 10),
+              const SizedBox(width: 12),
               _buildFeaturedCard(
                 'Body Scan',
                 '🧘‍♀️ Deep relaxation',
@@ -1056,7 +1160,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                   maxDuration: 20,
                 ),
               ),
-              const SizedBox(width: 10),
+              const SizedBox(width: 12),
               _buildFeaturedCard(
                 'Loving Kindness',
                 '💝 Cultivate compassion',
@@ -1074,69 +1178,6 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
           ),
         ),
       ],
-    );
-  }
-
-  Widget _buildFeaturedCard(String title, String subtitle, Color color,
-      IconData icon, String duration, VoidCallback onTap) {
-    return GestureDetector(
-      onTap: onTap,
-      child: SizedBox(
-        // Add fixed size container
-        width: 160, // Reduced width
-        height: 140, // Fixed height
-        child: _buildGlassCard(
-          child: Padding(
-            padding: const EdgeInsets.all(10),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Icon(icon, size: 24, color: color),
-                const SizedBox(height: 6),
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 4),
-                Expanded(
-                  // Make subtitle take remaining space
-                  child: Text(
-                    subtitle,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Theme.of(context)
-                          .colorScheme
-                          .onSurface
-                          .withOpacity(0.7),
-                    ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                Container(
-                  // Replace Chip with simpler duration indicator
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: color.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    duration,
-                    style: TextStyle(fontSize: 12, color: color),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
     );
   }
 
