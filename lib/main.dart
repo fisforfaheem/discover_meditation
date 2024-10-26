@@ -354,7 +354,7 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _animation;
-  int _selectedDuration = 5;
+  final int _selectedDuration = 5;
   Timer? _timer;
   int _remainingTime = 0;
   String _activeMeditation = '';
@@ -882,36 +882,492 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                'Meditation Techniques',
-                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-              )
+              // Header Section
+              Text(
+                '🧘‍♂️ Meditation Space',
+                style: TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                  color: Theme.of(context).colorScheme.onSurface,
+                ),
+              ).animate().fadeIn(duration: 600.ms).slideX(begin: -0.2, end: 0),
+
+              const SizedBox(height: 8),
+              Text(
+                'Find your inner peace through mindful practice',
+                style: TextStyle(
+                  fontSize: 16,
+                  color:
+                      Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                ),
+              ).animate().fadeIn(duration: 600.ms, delay: 200.ms),
+
+              const SizedBox(height: 24),
+
+              // Active Session Card (if meditation is active)
+              if (_activeMeditation.isNotEmpty)
+                _buildActiveMeditationCard()
+                    .animate()
+                    .fadeIn(duration: 800.ms)
+                    .scale(begin: const Offset(0.95, 0.95)),
+
+              // Featured Techniques Section
+              _buildFeaturedTechniques()
                   .animate()
-                  .fadeIn(duration: 600.milliseconds)
-                  .slideX(begin: -0.2, end: 0),
-              const SizedBox(height: 20),
-              GridView.count(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                crossAxisCount: 2,
-                mainAxisSpacing: 16,
-                crossAxisSpacing: 16,
-                children: [
-                  _buildMeditationOption('Breathe', Icons.air, Colors.blue),
-                  _buildMeditationOption(
-                      'Focus', Icons.center_focus_strong, Colors.green),
-                  _buildMeditationOption('Relax', Icons.spa, Colors.orange),
-                  _buildMeditationOption(
-                      'Sleep', Icons.nightlight_round, Colors.indigo),
-                ],
-              )
+                  .fadeIn(duration: 800.ms, delay: 200.ms),
+
+              const SizedBox(height: 24),
+
+              // Categories Section
+              _buildMeditationCategories()
                   .animate()
-                  .fadeIn(duration: 800.milliseconds, delay: 200.milliseconds)
-                  .scale(
-                      begin: const Offset(0.9, 0.9), end: const Offset(1, 1)),
+                  .fadeIn(duration: 800.ms, delay: 400.ms),
+
+              const SizedBox(height: 24),
+
+              // Quick Timer Section
+              _buildQuickTimerSection()
+                  .animate()
+                  .fadeIn(duration: 800.ms, delay: 600.ms),
+
+              const SizedBox(height: 24),
+
+              // Tips Section
+              _buildMeditationTips()
+                  .animate()
+                  .fadeIn(duration: 800.ms, delay: 800.ms),
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildActiveMeditationCard() {
+    return _buildGlassCard(
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    '🎯 Active Session',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  Text(
+                    _activeMeditation,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Theme.of(context)
+                          .colorScheme
+                          .onSurface
+                          .withOpacity(0.7),
+                    ),
+                  ),
+                ],
+              ),
+              Text(
+                '${(_remainingTime / 60).floor()}:${(_remainingTime % 60).toString().padLeft(2, '0')}',
+                style: const TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          LinearProgressIndicator(
+            value: _remainingTime / (_selectedDuration * 60),
+            backgroundColor:
+                Theme.of(context).colorScheme.primary.withOpacity(0.1),
+            valueColor: AlwaysStoppedAnimation<Color>(
+                Theme.of(context).colorScheme.primary),
+            borderRadius: BorderRadius.circular(10),
+            minHeight: 8,
+          ),
+          const SizedBox(height: 16),
+          ElevatedButton.icon(
+            onPressed: () {
+              setState(() {
+                _timer?.cancel();
+                _activeMeditation = '';
+              });
+            },
+            icon: const Icon(Icons.stop_circle_outlined),
+            label: const Text('End Session'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red.withOpacity(0.8),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFeaturedTechniques() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          '✨ Featured Techniques',
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: Theme.of(context).colorScheme.onSurface,
+          ),
+        ),
+        const SizedBox(height: 12),
+        SizedBox(
+          height: 140, // Match card height
+          child: ListView(
+            scrollDirection: Axis.horizontal,
+            children: [
+              _buildFeaturedCard(
+                'Mindful Breathing',
+                '🫁 Perfect for beginners',
+                Colors.blue,
+                Icons.air,
+                '5-10 min',
+                () => _showDurationPicker(
+                  'Mindful Breathing',
+                  description: 'Focus on your breath to calm your mind',
+                  minDuration: 5,
+                  maxDuration: 10,
+                ),
+              ),
+              const SizedBox(width: 10),
+              _buildFeaturedCard(
+                'Body Scan',
+                '🧘‍♀️ Deep relaxation',
+                Colors.green,
+                Icons.accessibility_new,
+                '15-20 min',
+                () => _showDurationPicker(
+                  'Body Scan',
+                  description:
+                      'Systematically release tension throughout your body',
+                  minDuration: 15,
+                  maxDuration: 20,
+                ),
+              ),
+              const SizedBox(width: 10),
+              _buildFeaturedCard(
+                'Loving Kindness',
+                '💝 Cultivate compassion',
+                Colors.pink,
+                Icons.favorite,
+                '10-15 min',
+                () => _showDurationPicker(
+                  'Loving Kindness',
+                  description: 'Develop compassion for yourself and others',
+                  minDuration: 10,
+                  maxDuration: 15,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildFeaturedCard(String title, String subtitle, Color color,
+      IconData icon, String duration, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: SizedBox(
+        // Add fixed size container
+        width: 160, // Reduced width
+        height: 140, // Fixed height
+        child: _buildGlassCard(
+          child: Padding(
+            padding: const EdgeInsets.all(10),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(icon, size: 24, color: color),
+                const SizedBox(height: 6),
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 4),
+                Expanded(
+                  // Make subtitle take remaining space
+                  child: Text(
+                    subtitle,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Theme.of(context)
+                          .colorScheme
+                          .onSurface
+                          .withOpacity(0.7),
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                Container(
+                  // Replace Chip with simpler duration indicator
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: color.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    duration,
+                    style: TextStyle(fontSize: 12, color: color),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMeditationCategories() {
+    final categories = [
+      {
+        'title': 'Breathe',
+        'description': '🫁 Mindful breathing exercises',
+        'icon': Icons.air,
+        'color': Colors.blue,
+        'minDuration': 5,
+        'maxDuration': 15,
+        'detail': 'Focus on your breath to find calm and clarity',
+      },
+      {
+        'title': 'Focus',
+        'description': '🎯 Enhance concentration',
+        'icon': Icons.center_focus_strong,
+        'color': Colors.green,
+        'minDuration': 10,
+        'maxDuration': 20,
+        'detail': 'Improve your concentration and mental clarity',
+      },
+      {
+        'title': 'Sleep',
+        'description': '😴 Better rest & relaxation',
+        'icon': Icons.nightlight_round,
+        'color': Colors.indigo,
+        'minDuration': 15,
+        'maxDuration': 30,
+        'detail': 'Prepare your mind and body for restful sleep',
+      },
+      {
+        'title': 'Stress Relief',
+        'description': '🌿 Reduce anxiety',
+        'icon': Icons.spa,
+        'color': Colors.orange,
+        'minDuration': 10,
+        'maxDuration': 25,
+        'detail': 'Release tension and find inner peace',
+      },
+    ];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          '🎯 Categories',
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: Theme.of(context).colorScheme.onSurface,
+          ),
+        ),
+        const SizedBox(height: 12),
+        GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 2,
+            mainAxisSpacing: 10,
+            crossAxisSpacing: 10,
+            childAspectRatio: 1.6, // Adjusted aspect ratio
+          ),
+          itemCount: categories.length,
+          itemBuilder: (context, index) {
+            final category = categories[index];
+            return _buildCategoryCard(
+              category['title'] as String,
+              category['description'] as String,
+              category['icon'] as IconData,
+              category['color'] as Color,
+              () => _showDurationPicker(
+                category['title'] as String,
+                description: category['detail'] as String,
+                minDuration: category['minDuration'] as int,
+                maxDuration: category['maxDuration'] as int,
+              ),
+            );
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildCategoryCard(String title, String description, IconData icon,
+      Color color, VoidCallback onTap) {
+    return SizedBox(
+      // Add fixed size container
+      height: 100, // Fixed height
+      child: _buildGlassCard(
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(15),
+          child: Padding(
+            padding: const EdgeInsets.all(10),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  // Organize icon and title in a row
+                  children: [
+                    Icon(icon, size: 20, color: color),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        title,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Expanded(
+                  // Make description take remaining space
+                  child: Text(
+                    description,
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: Theme.of(context)
+                          .colorScheme
+                          .onSurface
+                          .withOpacity(0.7),
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildQuickTimerSection() {
+    return _buildGlassCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            '⏱️ Quick Timer',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              _buildTimerChip('5 min', () => _startMeditation('Quick', 5)),
+              _buildTimerChip('10 min', () => _startMeditation('Quick', 10)),
+              _buildTimerChip('15 min', () => _startMeditation('Quick', 15)),
+              _buildTimerChip('20 min', () => _startMeditation('Quick', 20)),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTimerChip(String label, VoidCallback onTap) {
+    return ActionChip(
+      label: Text(label),
+      onPressed: onTap,
+      backgroundColor: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+      labelStyle: TextStyle(color: Theme.of(context).colorScheme.primary),
+    );
+  }
+
+  Widget _buildMeditationTips() {
+    return _buildGlassCard(
+      child: Column(
+        mainAxisSize: MainAxisSize.min, // Add this
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Row(
+            children: [
+              Icon(Icons.tips_and_updates, size: 20), // Reduced icon size
+              SizedBox(width: 8),
+              Text(
+                'Tips for Better Meditation',
+                style: TextStyle(
+                  fontSize: 16, // Reduced font size
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12), // Reduced spacing
+          _buildTipItem('Find a quiet, comfortable space'),
+          _buildTipItem('Keep a consistent practice schedule'),
+          _buildTipItem('Start with shorter sessions'),
+          _buildTipItem('Focus on your breath'),
+          _buildTipItem('Be kind to yourself'),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTipItem(String tip) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6.0), // Reduced padding
+      child: Row(
+        children: [
+          Icon(
+            Icons.check_circle_outline,
+            size: 16, // Reduced icon size
+            color: Theme.of(context).colorScheme.primary,
+          ),
+          const SizedBox(width: 6), // Reduced spacing
+          Expanded(
+            child: Text(
+              tip,
+              style: TextStyle(
+                fontSize: 12, // Reduced font size
+                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.8),
+              ),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -1348,43 +1804,88 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     );
   }
 
-  void _showDurationPicker(String meditationType) {
+  void _showDurationPicker(
+    String meditationType, {
+    String description = '',
+    int minDuration = 1,
+    int maxDuration = 60,
+  }) {
+    int selectedDuration = minDuration;
+
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text('Set $meditationType Duration'),
-          content: StatefulBuilder(
-            builder: (BuildContext context, StateSetter setState) {
-              return Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Slider(
-                    value: _selectedDuration.toDouble(),
-                    min: 1,
-                    max: 60,
-                    divisions: 59,
-                    label: _selectedDuration.toString(),
-                    onChanged: (double value) {
-                      setState(() {
-                        _selectedDuration = value.round();
-                      });
-                    },
-                  ),
-                  Text('$_selectedDuration minutes'),
-                ],
-              );
-            },
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-                _startMeditation(meditationType, _selectedDuration);
-              },
-              child: const Text('Start'),
-            ),
-          ],
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return Dialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      meditationType,
+                      style: const TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    if (description.isNotEmpty) ...[
+                      const SizedBox(height: 8),
+                      Text(
+                        description,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: Theme.of(context)
+                              .colorScheme
+                              .onSurface
+                              .withOpacity(0.7),
+                        ),
+                      ),
+                    ],
+                    const SizedBox(height: 20),
+                    Text(
+                      'Duration: $selectedDuration minutes',
+                      style: const TextStyle(fontSize: 16),
+                    ),
+                    Slider(
+                      value: selectedDuration.toDouble(),
+                      min: minDuration.toDouble(),
+                      max: maxDuration.toDouble(),
+                      divisions: maxDuration - minDuration,
+                      label: '$selectedDuration min',
+                      onChanged: (value) {
+                        setState(() {
+                          selectedDuration = value.round();
+                        });
+                      },
+                    ),
+                    const SizedBox(height: 20),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(context),
+                          child: const Text('Cancel'),
+                        ),
+                        const SizedBox(width: 8),
+                        ElevatedButton(
+                          onPressed: () {
+                            Navigator.pop(context);
+                            _startMeditation(meditationType, selectedDuration);
+                          },
+                          child: const Text('Start'),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
         );
       },
     );
