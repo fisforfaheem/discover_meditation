@@ -193,7 +193,7 @@ class _MeditationAppState extends State<MeditationApp> {
     );
 
     return MaterialApp(
-      title: 'Discover Yourself Meditation',
+      title: 'Remind to Relax',
       theme: lightTheme,
       darkTheme: darkTheme,
       themeMode: _isDarkMode ? ThemeMode.dark : ThemeMode.light,
@@ -242,7 +242,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               Icon(Icons.spa, size: 100, color: Colors.white),
               SizedBox(height: 20),
               Text(
-                'Welcome to Discover Yourself',
+                'Welcome to Remind to Relax',
                 style: TextStyle(
                     fontSize: 24,
                     color: Colors.white,
@@ -420,7 +420,7 @@ class _SplashScreenState extends State<SplashScreen> {
                 const Icon(Icons.self_improvement, size: 100),
                 const SizedBox(height: 20),
                 Text(
-                  'Discover Yourself',
+                  'Remind to Relax',
                   style: Theme.of(context).textTheme.headlineMedium,
                 ),
                 const SizedBox(height: 10),
@@ -2202,7 +2202,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                 ),
                 const SizedBox(height: 20),
                 const Text(
-                  '🧘‍♀️ Discover Yourself Meditation',
+                  '🧘‍♀️ Remind to Relax',
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
                 ),
                 const SizedBox(height: 16),
